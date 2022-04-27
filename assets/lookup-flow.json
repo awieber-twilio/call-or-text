@@ -1,0 +1,188 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "next": "lookup",
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "lookup",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "split_1",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "ZS17eea392304b68523392c94a1f3fba22",
+          "environment_sid": "ZE15df687948d66d28836cbb26c7a9aa89",
+          "offset": {
+            "x": 270,
+            "y": 200
+          },
+          "function_sid": "ZHff3e2392bc0414c7877420445b6c5834",
+          "parameters": [
+            {
+              "value": "{{contact.channel.address}}",
+              "key": "to"
+            }
+          ],
+          "url": "https://lookup-4796.twil.io/lookup"
+        }
+      },
+      {
+        "name": "split_1",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "call_user_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "If value equal_to landline",
+                "arguments": [
+                  "{{widgets.lookup.parsed.Carrier}}"
+                ],
+                "type": "equal_to",
+                "value": "landline"
+              }
+            ]
+          },
+          {
+            "next": "send_message_1",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "If value equal_to mobile",
+                "arguments": [
+                  "{{widgets.lookup.parsed.Carrier}}"
+                ],
+                "type": "equal_to",
+                "value": "mobile"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.lookup.parsed.Carrier}}",
+          "offset": {
+            "x": 90,
+            "y": 420
+          }
+        }
+      },
+      {
+        "name": "call_user_1",
+        "type": "make-outgoing-call-v2",
+        "transitions": [
+          {
+            "next": "say_play_1",
+            "event": "answered"
+          },
+          {
+            "event": "busy"
+          },
+          {
+            "event": "noAnswer"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "machine_detection_speech_threshold": "2400",
+          "detect_answering_machine": false,
+          "send_digits": "",
+          "sip_auth_username": "",
+          "offset": {
+            "x": 10,
+            "y": 730
+          },
+          "recording_status_callback": "",
+          "sip_auth_password": "",
+          "recording_channels": "mono",
+          "timeout": 60,
+          "machine_detection": "Enable",
+          "trim": "true",
+          "record": false,
+          "machine_detection_speech_end_threshold": "1200",
+          "machine_detection_timeout": "30",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "machine_detection_silence_timeout": "5000"
+        }
+      },
+      {
+        "name": "say_play_1",
+        "type": "say-play",
+        "transitions": [
+          {
+            "event": "audioComplete"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -220,
+            "y": 990
+          },
+          "loop": 1,
+          "say": "This is an alert"
+        }
+      },
+      {
+        "name": "send_message_1",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 440,
+            "y": 710
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "This is an alert"
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }
